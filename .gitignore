@@ -1,0 +1,47 @@
+node_modules
+dist
+dist-ssr
+
+# Environment / secrets — never commit
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.local
+
+# Editor / IDE config
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Claude Code per-machine config (keep skills; exclude personal permissions)
+.claude/settings.local.json
+.claude/settings.local.*
+
+# User-uploaded test datasets (the canonical sample is generated from
+# scripts/generateSample.cjs into src/data/sampleData.js — any CSV/XLSX
+# dropped at project root is assumed to be user test material, not part
+# of the project)
+/*.csv
+/*.xlsx
+/*.xls
+/*.parquet
