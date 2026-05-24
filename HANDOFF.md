@@ -22,20 +22,54 @@ synthesizes their findings, and writes an audience-adapted narrative.
 
 ## 2. Current state
 
-**Status: working end-to-end, validated against the sample dataset.**
+**Status: working end-to-end, validated against the sample dataset, published.**
 
 - Dev server: `npm run dev` → http://localhost:5173/
-- Production build: `npm run build` (≈448 KB pre-gzip / 128 KB gzip, 144 modules)
+- Production build: `npm run build` (≈450 KB pre-gzip / 129 KB gzip, 144 modules)
 - One-shot verify (lint + tests + build): `npm run verify`
 - Individual stages: `npm run lint`, `npm run test:utils`, `npm run test:pipeline`
 - `npm audit`: 0 vulnerabilities
-- CI: GitHub Actions at `.github/workflows/ci.yml` runs `npm run verify` on every push / PR
+- CI: GitHub Actions at `.github/workflows/ci.yml` runs `npm run verify` on every push / PR (~20s wall-clock, passing)
 
 The most recent end-to-end run with the sample data completed successfully:
 Inspector → Orchestrator → 3 specialists in parallel → Synthesis (≈3 min) →
 Narrative → Results. The user verified the embedded anomalies are detected
 (restaurant acceleration, shopping share shift, grocery frequency anomaly,
 August dental outlier).
+
+### Publication
+
+- **Repo**: https://github.com/lecari/anomaly-hunter (public, MIT)
+- **License**: `LICENSE` file in root, Copyright 2025 Luca Ecari, MIT
+- **package.json**: version `1.0.0`, license `MIT`, author `Luca Ecari`
+- **git remote**: `origin` already configured to push HTTPS to the repo above
+- **git local config** (this repo only, NOT global): `user.name = "Luca Ecari"`, `user.email = "luca.ecari@gmail.com"`
+- **GitHub CLI**: `gh` installed ARM-native at `/opt/homebrew/bin/gh` (Mac is M4 / Apple Silicon — see Environment note below). Authenticated as `lecari` with token scopes `repo, gist, read:org, workflow`.
+
+### Push workflow (now that the repo exists)
+
+```bash
+npm run verify              # mandatory — catches regressions before commit
+git add .
+git commit -m "..."
+git push                    # HTTPS via gh-managed auth; no token prompts
+# CI runs automatically on the push; check status with:
+/opt/homebrew/bin/gh run list --limit 1
+```
+
+### Environment note — Apple Silicon
+
+The host is an M4 Mac running macOS 26 (Tahoe). It has **two** Homebrews installed:
+`/usr/local/brew` (Intel/Rosetta) and `/opt/homebrew/brew` (ARM-native).
+**Always prefer the ARM-native one** for binaries that have native builds —
+`gh` installed via `/usr/local/brew` was broken (Rosetta x86_64 binary that
+wouldn't execute under M4). The fix was:
+
+```bash
+arch -arm64 /opt/homebrew/bin/brew install gh
+```
+
+If you ever need to install another CLI tool, follow this pattern.
 
 ---
 
@@ -55,7 +89,7 @@ August dental outlier).
 ```
                           ┌──────────────────────────────┐
    CSV + user context ──▶ │ 1. Inspector                 │  Tukey EDA · DAMA · ISO/IEC 25012
-                          │   data profile               │  6144 tokens
+                          │   data profile               │  16384 tokens
                           └──────────────┬───────────────┘
                                          ▼
                           ┌──────────────────────────────┐
@@ -349,7 +383,7 @@ src/
 │                                       DiscoveryType,Convergence,AnomalyType},
 │                                       normalize{Specialist,Synthesis}Anomalies,
 │                                       inferSignificanceFromConfidence
-│   ├── inspector.js                  6144 tokens; emits dataOverview + columns +
+│   ├── inspector.js                  16384 tokens; emits dataOverview + columns +
 │                                       dataQualityIssues + potentialRelationships
 │   ├── orchestrator.js               6144 tokens; activation rules + per-agent
 │                                       instructions {focus, prioritized,
@@ -383,10 +417,14 @@ src/
     └── sampleData.js                 Auto-generated CHF 2024 transactions (~24 KB)
 scripts/
 ├── generateSample.cjs                Deterministic seeded generator
-├── testSafeJson.mjs                  ~40 unit tests on utils
+├── testSafeJson.mjs                  ~50 unit tests on utils
 └── testPipeline.mjs                  16 e2e simulation checks on sample data
-README.md                             User-facing project doc
+.claude/skills/                       Claude Code skills (verify, audit)
+.github/workflows/ci.yml              GitHub Actions: lint + tests + build on push/PR
+LICENSE                               MIT, Copyright 2025 Luca Ecari
+README.md                             User-facing project doc (with CI/license/tech badges)
 HANDOFF.md                            This file
+CLAUDE.md                             Project conventions for Claude sessions
 ```
 
 ---
@@ -418,8 +456,11 @@ the patterns are still present.
 
 - API key is held in React state only. Never written to localStorage,
   sessionStorage, cookies, or any backend. Refreshing the page clears it.
-- A full analysis on the sample CSV costs ≈0.10–0.30 USD on Sonnet 4.6
-  (7 calls; most spend is the synthesis with its 16384 token ceiling).
+- A full analysis on the sample CSV costs roughly **0.10–0.30 USD** on Sonnet 4.6
+  for a first cold run (7 calls; synthesis dominates the cost). With prompt
+  caching active on system prompts (5-min TTL), **retries and back-to-back
+  analyses cost significantly less** — the cached system blocks are billed at
+  ~10% of normal input on hits.
 - The synthesis is the slowest step (often 2–3 minutes); specialists in
   parallel run faster individually but can hit TPM limits and stall.
 - No telemetry, no analytics, no third-party scripts.
@@ -495,15 +536,21 @@ None of these are blockers for current use.
 
 ## 16. How to resume from a fresh chat
 
-1. Read this file end-to-end.
-2. `cd /Users/lucaecari/Desktop/anomaly-hunter && npm install && npm run dev`
-3. Open `http://localhost:5173/`, paste an Anthropic API key, click
-   "Try with sample data", click "Analyze". A full run takes ≈3–5 minutes
-   wall-clock (synthesis is the slow leg).
-4. If anything fails: run `npm run verify` to get a coherent pass/fail across
-   lint + tests + build in one shot.
-5. The agent system prompts in `src/agents/<name>.js` are the source of truth
+1. Read this file end-to-end, then `CLAUDE.md` for conventions.
+2. The project is already published. Working directory is
+   `/Users/lucaecari/Desktop/anomaly-hunter`. Git is already configured (local
+   `user.name`/`user.email`) and `origin` points at
+   https://github.com/lecari/anomaly-hunter. `gh` CLI is already authenticated.
+3. Local dev: `npm install && npm run dev` → http://localhost:5173/.
+   Paste an API key, "Try with sample data", "Analyze". Full run ≈3–5 min.
+4. Verifying changes: `npm run verify` (lint + tests + build, single command).
+   CI runs the same on every push.
+5. Standard change workflow: edit → `npm run verify` → `git add . && git commit -m "..." && git push`.
+6. The agent system prompts in `src/agents/<name>.js` are the source of truth
    for behavior. The UI lives in `src/components/`. State machine lives in
    `src/App.jsx`. Cross-cutting helpers in `src/agents/utils.js`.
+7. If you need to add a new dependency that ships a CLI binary, install it
+   via the ARM-native Homebrew at `/opt/homebrew` under `arch -arm64` — see
+   the Environment note in Section 2.
 
 That's everything.
