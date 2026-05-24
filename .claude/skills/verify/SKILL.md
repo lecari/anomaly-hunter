@@ -5,37 +5,37 @@ description: Run the full pre-commit verification pipeline for Anomaly Hunter (l
 
 # /verify — Anomaly Hunter pre-flight check
 
-Runs the four standard verification steps in order and reports each result.
+Runs the standard verification sequence and reports the result.
 Stop and surface the failure if any step fails.
 
-## Steps (run as a single Bash invocation, in this exact order)
+## Single command (preferred)
 
 ```bash
-echo "=== 1/4 ESLint ==="
-npm run lint 2>&1 | tail -5
+npm run verify
+```
 
-echo ""
-echo "=== 2/4 Util unit tests ==="
-node scripts/testSafeJson.mjs 2>&1 | tail -3
+This is the same script CI runs on every push (`.github/workflows/ci.yml`).
+It chains: `lint && test:utils && test:pipeline && build`. A single
+non-zero exit means at least one stage failed; read the output above
+the failure to find the cause.
 
-echo ""
-echo "=== 3/4 Pipeline simulation ==="
-node scripts/testPipeline.mjs 2>&1 | tail -3
+## Or run the stages individually (when you want isolation)
 
-echo ""
-echo "=== 4/4 Production build ==="
-npx vite build 2>&1 | grep -E "(error|Error|✓|dist/)" | head -8
-rm -rf dist
+```bash
+npm run lint           # ESLint across all JS/JSX
+npm run test:utils     # ~50 unit tests on src/agents/utils.js
+npm run test:pipeline  # 16 end-to-end checks against sample data
+npm run build          # Vite production build
 ```
 
 ## How to interpret
 
-| Step | Pass signal |
+| Stage | Pass signal |
 | --- | --- |
-| ESLint | No error/warning lines after `> eslint .` |
-| testSafeJson.mjs | Final line: `All utils tests passed.` |
-| testPipeline.mjs | Final line: `Pipeline simulation passed.` |
-| vite build | `✓ 14X modules transformed.` + a `dist/` block |
+| lint | No error/warning lines after `> eslint .` |
+| test:utils | Final line: `All utils tests passed.` |
+| test:pipeline | Final line: `Pipeline simulation passed.` |
+| build | `✓ 14X modules transformed.` + a `dist/` block |
 
 ## When NOT to use
 

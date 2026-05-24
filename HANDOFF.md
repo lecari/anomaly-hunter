@@ -26,10 +26,10 @@ synthesizes their findings, and writes an audience-adapted narrative.
 
 - Dev server: `npm run dev` → http://localhost:5173/
 - Production build: `npm run build` (≈448 KB pre-gzip / 128 KB gzip, 144 modules)
-- Lint: `npm run lint` (clean)
+- One-shot verify (lint + tests + build): `npm run verify`
+- Individual stages: `npm run lint`, `npm run test:utils`, `npm run test:pipeline`
 - `npm audit`: 0 vulnerabilities
-- Unit tests: `node scripts/testSafeJson.mjs` (utils edge cases)
-- Pipeline sim:  `node scripts/testPipeline.mjs` (sample data flow checks)
+- CI: GitHub Actions at `.github/workflows/ci.yml` runs `npm run verify` on every push / PR
 
 The most recent end-to-end run with the sample data completed successfully:
 Inspector → Orchestrator → 3 specialists in parallel → Synthesis (≈3 min) →
@@ -500,8 +500,8 @@ None of these are blockers for current use.
 3. Open `http://localhost:5173/`, paste an Anthropic API key, click
    "Try with sample data", click "Analyze". A full run takes ≈3–5 minutes
    wall-clock (synthesis is the slow leg).
-4. If anything fails: check `npm run lint`, then
-   `node scripts/testSafeJson.mjs`, then `node scripts/testPipeline.mjs`.
+4. If anything fails: run `npm run verify` to get a coherent pass/fail across
+   lint + tests + build in one shot.
 5. The agent system prompts in `src/agents/<name>.js` are the source of truth
    for behavior. The UI lives in `src/components/`. State machine lives in
    `src/App.jsx`. Cross-cutting helpers in `src/agents/utils.js`.

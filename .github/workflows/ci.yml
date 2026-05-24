@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Single workflow that mirrors `npm run verify` locally: lint + utility unit
+# tests + pipeline simulation + production build. Catches regressions before
+# they ship. No secrets needed — the app's runtime requires an Anthropic API
+# key, but tests are LLM-free and self-contained.
+
+jobs:
+  verify:
+    name: Lint, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Utility unit tests
+        run: npm run test:utils
+
+      - name: Pipeline simulation
+        run: npm run test:pipeline
+
+      - name: Production build
+        run: npm run build

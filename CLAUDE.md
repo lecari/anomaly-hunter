@@ -286,11 +286,20 @@ general    → no badge
 ## Testing — run before declaring "done"
 
 ```bash
+npm run verify                                  # all of the below in one shot
+```
+
+Which expands to (and individual stages can be run via npm scripts of the same name):
+
+```bash
 npm run lint                                    # ESLint, must be clean
-node scripts/testSafeJson.mjs                   # ~40 utils tests
-node scripts/testPipeline.mjs                   # 16 e2e sim checks
+npm run test:utils                              # ~50 utils tests
+npm run test:pipeline                           # 16 e2e sim checks
 npm run build                                   # Vite production build
 ```
+
+GitHub Actions CI (`.github/workflows/ci.yml`) runs the same `npm run verify`
+on every push to main and every PR.
 
 End-to-end manual test if pipeline touched: `npm run dev`, sample data, full
 run. A full run takes ≈3–5 minutes (synthesis is the slow leg).

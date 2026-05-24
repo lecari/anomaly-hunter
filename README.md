@@ -1,5 +1,11 @@
 # Anomaly Hunter
 
+[![CI](https://github.com/lecari/anomaly-hunter/actions/workflows/ci.yml/badge.svg)](https://github.com/lecari/anomaly-hunter/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
+[![Claude](https://img.shields.io/badge/Claude-Sonnet%204.6-D97757)](https://www.anthropic.com)
+
 A domain-agnostic, multi-agent anomaly detection web app. Drop in any tabular CSV — sales, sensor logs, transactions, HR data, lab measurements — and a coordinated team of seven Claude-powered expert agents will autonomously profile the data, design an analytical strategy, hunt for anomalies in parallel using state-of-the-art methodologies, synthesize convergent evidence, and write a tailored narrative for your audience.
 
 Everything runs in your browser. Nothing is stored anywhere except your tab.
@@ -154,6 +160,25 @@ npm run dev
 Then open the URL Vite prints (typically `http://localhost:5173`).
 
 You will need an Anthropic API key. Paste it into the app — it is held in memory only for that browser session and is sent directly to Anthropic's API from your browser via the `@anthropic-ai/sdk` with `dangerouslyAllowBrowser: true`.
+
+### Verifying changes
+
+A single command runs lint + utility unit tests + pipeline simulation + production build, in that order:
+
+```bash
+npm run verify
+```
+
+Or the individual pieces:
+
+```bash
+npm run lint           # ESLint across all JS/JSX
+npm run test:utils     # ~50 unit tests for parsing, normalization, CSV helpers
+npm run test:pipeline  # 16 end-to-end checks against the sample dataset
+npm run build          # Vite production build
+```
+
+`npm run verify` is what CI runs on every push.
 
 ---
 

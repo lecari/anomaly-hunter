@@ -10,7 +10,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:utils": "node scripts/testSafeJson.mjs",
+    "test:pipeline": "node scripts/testPipeline.mjs",
+    "test": "npm run test:utils && npm run test:pipeline",
+    "verify": "npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.98.0",
